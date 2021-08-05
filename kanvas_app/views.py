@@ -40,3 +40,11 @@ class AccountsView(APIView):
         serializer_to_retrieve = UserSerializer(new_user)
 
         return Response(serializer_to_retrieve.data)
+
+
+class CoursesView(APIView):
+    def post(self, request):
+        return Response({'msg': 'Post OK'})
+
+    def put(self, request):
+        return Response({'msg': 'Put OK'})
