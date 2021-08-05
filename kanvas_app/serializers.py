@@ -13,6 +13,8 @@ class UserSimpleSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     username = serializers.CharField()
 
+class CoursesSerializer(serializers.Serializer):
+    name = serializers.CharField()
 
 class CoursesUserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
