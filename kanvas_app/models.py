@@ -18,3 +18,4 @@ class Submission(models.Model):
     repo = models.CharField(max_length=255)
     user_id = models.IntegerField()
     activity_id = models.IntegerField()
+    reference_activity = models.ForeignKey(Activity, on_delete=models.CASCADE)

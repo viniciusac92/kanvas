@@ -8,9 +8,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from kanvas_app.models import Course
-from kanvas_app.permissions import IsInstructorOrReadOnly
+from kanvas_app.models import Activity, Course, Submission
+from kanvas_app.permissions import IsInstructorOrReadOnly, TeamMemberOrReadOnly
 from kanvas_app.serializers import (
+    ActivitySerializer,
     CoursesSerializer,
     CoursesUserSerializer,
     UserSerializer,
@@ -127,3 +128,27 @@ class CoursesRetrieveView(APIView):
         course = get_object_or_404(Course, id=course_id)
         course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ActivitiesView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [TeamMemberOrReadOnly]
+
+    def get(self, _):
+        activities = Activity.objects.all()
+        serialized = ActivitySerializer(activities, many=True)
+        return Response(serialized.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        activity_request_serializer = ActivitySerializer(data=request.data)
+        if not activity_request_serializer.is_valid():
+            return Response(
+                activity_request_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        validated_course_data = course_request_serializer.validated_data
+        course_request_data = Course.objects.get_or_create(**validated_course_data)[0]
+        course_request_data.users.set([])
+        retrieve_serializer = CoursesUserSerializer(course_request_data)
+        return Response(retrieve_serializer.data, status=status.HTTP_201_CREATED)
