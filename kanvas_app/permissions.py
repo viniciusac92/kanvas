@@ -10,10 +10,7 @@ class IsInstructorOrReadOnly(BasePermission):
         return user.is_staff and user.is_superuser
 
 
-class TeamMemberOrReadOnly(BasePermission):
+class TeamMemberOnly(BasePermission):
     def has_permission(self, request, _):
-        if request.method == "GET":
-            return True
-
         user = request.user
         return user.is_staff

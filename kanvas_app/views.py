@@ -9,9 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kanvas_app.models import Activity, Course, Submission
-from kanvas_app.permissions import IsInstructorOrReadOnly, TeamMemberOrReadOnly
+from kanvas_app.permissions import IsInstructorOrReadOnly, TeamMemberOnly
 from kanvas_app.serializers import (
-    ActivitySerializer,
+    ActivitySimpleSerializer,
+    ActivitySubmissionSerializer,
     CoursesSerializer,
     CoursesUserSerializer,
     UserSerializer,
@@ -51,7 +52,7 @@ class AccountsView(APIView):
         return Response(serializer_to_retrieve.data)
 
 
-class Courses(APIView):
+class CoursesView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsInstructorOrReadOnly]
 
@@ -132,23 +133,32 @@ class CoursesRetrieveView(APIView):
 
 class ActivitiesView(APIView):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [TeamMemberOrReadOnly]
+    permission_classes = [TeamMemberOnly]
 
     def get(self, _):
         activities = Activity.objects.all()
-        serialized = ActivitySerializer(activities, many=True)
+        serialized = ActivitySubmissionSerializer(activities, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        activity_request_serializer = ActivitySerializer(data=request.data)
+        activity_request_serializer = ActivitySimpleSerializer(data=request.data)
+
         if not activity_request_serializer.is_valid():
             return Response(
                 activity_request_serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        validated_course_data = course_request_serializer.validated_data
-        course_request_data = Course.objects.get_or_create(**validated_course_data)[0]
-        course_request_data.users.set([])
-        retrieve_serializer = CoursesUserSerializer(course_request_data)
+        validated_activity_data = activity_request_serializer.validated_data
+        # import ipdb
+
+        # ipdb.set_trace()
+        activity_request_data = Activity.objects.get_or_create(
+            **validated_activity_data
+        )[0]
+        activity_request_data.submissions.set([])
+        retrieve_serializer = ActivitySubmissionSerializer(activity_request_data)
+        # import ipdb
+
+        # ipdb.set_trace()
         return Response(retrieve_serializer.data, status=status.HTTP_201_CREATED)

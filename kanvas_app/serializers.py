@@ -32,7 +32,12 @@ class SubmissionSerializer(serializers.Serializer):
     activity_id = serializers.IntegerField()
 
 
-class ActivitySerializer(serializers.Serializer):
+class ActivitySimpleSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    points = serializers.IntegerField()
+
+
+class ActivitySubmissionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
     points = serializers.IntegerField()
