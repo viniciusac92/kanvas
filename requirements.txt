@@ -6,6 +6,7 @@ black==21.7b0
 click==8.0.1
 decorator==5.0.9
 Django==3.2.6
+django-cors-headers==3.7.0
 djangorestframework==3.12.4
 ipdb==0.13.9
 ipython==7.26.0
