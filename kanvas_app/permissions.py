@@ -1,8 +1,10 @@
 from rest_framework.permissions import BasePermission
 
 
-class IsInstructor(BasePermission):
+class IsInstructorOrReadOnly(BasePermission):
     def has_permission(self, request, view):
-        user = request.user
+        if request.method == "GET":
+            return True
 
+        user = request.user
         return user.is_staff and user.is_superuser
