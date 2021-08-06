@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -57,9 +58,14 @@ class AccountsView(APIView):
 
 
 class CoursesView(APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated, IsInstructor]
+    def get(self, _):
+        courses = Course.objects.all()
+        serialized = CoursesUserSerializer(courses, many=True)
 
+        return Response(serialized.data, status=status.HTTP_200_OK)
+
+    @authentication_classes([TokenAuthentication])
+    @permission_classes([IsAuthenticated, IsInstructor])
     def post(self, request):
         course_request_serializer = CoursesSerializer(data=request.data)
 
@@ -76,6 +82,8 @@ class CoursesView(APIView):
 
         return Response(retrieve_serializer.data, status=status.HTTP_201_CREATED)
 
+    @authentication_classes([TokenAuthentication])
+    @permission_classes([IsAuthenticated, IsInstructor])
     def put(self, request, course_id):
         if course_id:
             try:
