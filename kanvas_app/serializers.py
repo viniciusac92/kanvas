@@ -22,3 +22,23 @@ class CoursesUserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     users = UserSimpleSerializer(many=True)
+
+
+class SubmissionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    grade = serializers.IntegerField()
+    repo = serializers.CharField()
+    user_id = serializers.IntegerField()
+    activity_id = serializers.IntegerField()
+
+
+class ActivitySimpleSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    points = serializers.IntegerField()
+
+
+class ActivitySubmissionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    points = serializers.IntegerField()
+    submissions = SubmissionSerializer(many=True)
