@@ -84,10 +84,21 @@ class CoursesView(APIView):
 
                 for student_id in user_ids_list:
                     user = User.objects.get(id=student_id)
-                    if user:
+                    if user and not user.is_staff and not user.is_superuser:
                         students_list.append(user)
 
+                    else:
+                        return Response(
+                            {'errors': 'Only students can be enrolled in the course.'},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
                 course_selected_data = Course.objects.get(id=course_id)
+                if not course_selected_data:
+                    return Response(
+                        {"errors": "invalid course_id"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
                 course_selected_data.users.set(students_list)
                 retrieve_course_serialized = CoursesUserSerializer(course_selected_data)
 
