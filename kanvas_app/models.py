@@ -13,7 +13,7 @@ class Activity(models.Model):
 
 
 class Submission(models.Model):
-    grade = models.IntegerField()
+    grade = models.IntegerField(null=True)
     repo = models.CharField(max_length=255)
     user_id = models.IntegerField()
     activity_id = models.IntegerField()
