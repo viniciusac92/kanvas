@@ -165,7 +165,6 @@ class SubmissionView(APIView):
                 submission_request_serializer = SubmissionSimpleSerializer(
                     data=request.data
                 )
-
                 if not submission_request_serializer.is_valid():
                     return Response(
                         submission_request_serializer.errors,
@@ -173,11 +172,6 @@ class SubmissionView(APIView):
                     )
 
                 validated_activity_data = submission_request_serializer.validated_data
-
-                import ipdb
-
-                ipdb.set_trace()
-
                 submission_create_data = Submission(
                     grade=None,
                     repo=validated_activity_data['repo'],
@@ -185,13 +179,9 @@ class SubmissionView(APIView):
                     activity_id=activity_id,
                 )
                 submission_create_data.save()
-                import ipdb
-
-                ipdb.set_trace()
                 retrieve_submission_serialized = SubmissionSerializer(
                     submission_create_data
                 )
-
                 return Response(
                     retrieve_submission_serialized.data, status=status.HTTP_201_CREATED
                 )
@@ -210,11 +200,9 @@ class SubmissionEditView(APIView):
         if submission_id:
             try:
                 student_grade = request.data['grade']
-
                 submission_selected_data = get_object_or_404(
                     Submission, id=submission_id
                 )
-
                 submission_selected_data.grade = student_grade
                 submission_selected_data.save()
                 retrieve_submission_serialized = SubmissionSerializer(
@@ -228,3 +216,13 @@ class SubmissionEditView(APIView):
                 return Response(
                     {'message': 'Id not found'}, status=status.HTTP_404_NOT_FOUND
                 )
+
+
+class SubmissionRetrieveView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [StudentOnly]
+
+    def get(self, _):
+        submissions = Submission.objects.all()
+        serialized = SubmissionSerializer(submissions, many=True)
+        return Response(serialized.data, status=status.HTTP_200_OK)
