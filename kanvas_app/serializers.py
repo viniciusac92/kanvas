@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from traitlets.traitlets import default
 
 
 class UserSerializer(serializers.Serializer):
@@ -22,6 +23,11 @@ class CoursesUserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     users = UserSimpleSerializer(many=True)
+
+
+class SubmissionSimpleSerializer(serializers.Serializer):
+    grade = serializers.IntegerField(read_only=True, default=None)
+    repo = serializers.CharField()
 
 
 class SubmissionSerializer(serializers.Serializer):

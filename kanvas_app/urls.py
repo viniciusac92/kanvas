@@ -6,6 +6,9 @@ from .views import (
     CoursesRetrieveView,
     CoursesView,
     LoginView,
+    SubmissionEditView,
+    SubmissionRetrieveView,
+    SubmissionView,
 )
 
 urlpatterns = [
@@ -15,4 +18,7 @@ urlpatterns = [
     path('api/courses/<int:course_id>/', CoursesRetrieveView.as_view()),
     path('api/courses/<int:course_id>/registrations/', CoursesView.as_view()),
     path('api/activities/', ActivitiesView.as_view()),
+    path('api/activities/<int:activity_id>/submissions/', SubmissionView.as_view()),
+    path('api/submissions/<int:submission_id>/', SubmissionEditView.as_view()),
+    path('api/submissions/', SubmissionRetrieveView.as_view()),
 ]
