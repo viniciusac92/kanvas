@@ -135,6 +135,13 @@ class ActivitiesView(APIView):
 
     def get(self, _):
         activities = Activity.objects.all()
+        for activity_data in activities:
+            submissions = Submission.objects.filter(activity_id=activity_data.id)
+            submission_list = []
+            for sub in submissions:
+                submission_list.append(sub)
+            activity_data.submissions.set(submission_list)
+
         serialized = ActivitySubmissionSerializer(activities, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
