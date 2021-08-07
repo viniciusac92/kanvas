@@ -83,15 +83,10 @@ class CoursesView(APIView):
                 user_ids_list = request.data['user_ids']
                 students_list = []
                 for student_id in user_ids_list:
-                    user = User.objects.get(id=student_id)
+                    user = get_object_or_404(User, id=student_id)
                     if user and not user.is_staff and not user.is_superuser:
                         students_list.append(user)
 
-                    else:
-                        return Response(
-                            {'errors': 'Only students can be enrolled in the course.'},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
                 course_selected_data = Course.objects.get(id=course_id)
                 if not course_selected_data:
                     return Response(
@@ -184,7 +179,7 @@ class SubmissionView(APIView):
                 ipdb.set_trace()
 
                 submission_create_data = Submission(
-                    grade=validated_activity_data['grade'],
+                    grade=None,
                     repo=validated_activity_data['repo'],
                     user_id=request.user.id,
                     activity_id=activity_id,
@@ -199,6 +194,34 @@ class SubmissionView(APIView):
 
                 return Response(
                     retrieve_submission_serialized.data, status=status.HTTP_201_CREATED
+                )
+
+            except ObjectDoesNotExist:
+                return Response(
+                    {'message': 'Id not found'}, status=status.HTTP_404_NOT_FOUND
+                )
+
+
+class SubmissionEditView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [TeamMemberOnly]
+
+    def put(self, request, submission_id):
+        if submission_id:
+            try:
+                student_grade = request.data['grade']
+
+                submission_selected_data = get_object_or_404(
+                    Submission, id=submission_id
+                )
+
+                submission_selected_data.grade = student_grade
+                submission_selected_data.save()
+                retrieve_submission_serialized = SubmissionSerializer(
+                    submission_selected_data
+                )
+                return Response(
+                    retrieve_submission_serialized.data, status=status.HTTP_200_OK
                 )
 
             except ObjectDoesNotExist:

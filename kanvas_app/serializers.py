@@ -26,7 +26,7 @@ class CoursesUserSerializer(serializers.Serializer):
 
 
 class SubmissionSimpleSerializer(serializers.Serializer):
-    grade = serializers.IntegerField(required=False, default=None)
+    grade = serializers.IntegerField(read_only=True, default=None)
     repo = serializers.CharField()
 
 
