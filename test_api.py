@@ -126,7 +126,7 @@ class TestAccountView(TestCase):
         response = self.client.post(
             "/api/accounts/", self.instructor_data, format="json"
         )
-        
+
         # tenta criar novamente o usuário instructor, testa se o sistema retorna 409
         response_2 = self.client.post(
             "/api/accounts/", self.instructor_data, format="json"
@@ -183,19 +183,17 @@ class TestCourseView(TestCase):
         }
 
         self.course_data = {"name": "course1"}
-    
+
     def test_create_course_with_invalid_token(self):
         # criação de um instructor user
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
-        
+
         # Usando um token inválido
         self.client.credentials(HTTP_AUTHORIZATION="Token " + "invalidtoken")
-        
+
         # Tentativa de criação de um curso
-        response = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        response = self.client.post("/api/courses/", self.course_data, format="json")
+
         # Testa se retorna 401 e no body "invalid token"
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), {"detail": "Invalid token."})
@@ -210,16 +208,14 @@ class TestCourseView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Criação de um curso
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
+        course = self.client.post("/api/courses/", self.course_data, format="json")
 
         # Testa se o retorno está correto e o status_code também
         self.assertDictEqual(course.json(), {"id": 1, "name": "course1", "users": []})
         self.assertEqual(course.status_code, 201)
-    
+
     def test_create_two_courses_with_the_same_name_generate_the_same_ids(self):
         # Criação de um instructor user
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -230,20 +226,20 @@ class TestCourseView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Criação do curso1
-        course_1 = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        course_1 = self.client.post("/api/courses/", self.course_data, format="json")
+
         # Criação do curso1 novamente
         course_1_again = self.client.post(
             "/api/courses/", self.course_data, format="json"
         )
-        
-        # Testa se os ids são iguais na criação do mesmo curso duas vezes 
+
+        # Testa se os ids são iguais na criação do mesmo curso duas vezes
         self.assertDictEqual(course_1.json(), {"id": 1, "name": "course1", "users": []})
-        self.assertDictEqual(course_1_again.json(), {"id": 1, "name": "course1", "users": []})
+        self.assertDictEqual(
+            course_1_again.json(), {"id": 1, "name": "course1", "users": []}
+        )
 
     def test_facilitator_or_student_cannot_create_course(self):
         # Criação de um student user
@@ -273,11 +269,12 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Facilitador não pode criar cursos
-        response = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
+        response = self.client.post("/api/courses/", self.course_data, format="json")
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json(), {"detail": "You do not have permission to perform this action."})
+        self.assertEqual(
+            response.json(),
+            {"detail": "You do not have permission to perform this action."},
+        )
 
     def test_anonymous_can_list_courses(self):
         # Criação de um instructor user
@@ -304,7 +301,7 @@ class TestCourseView(TestCase):
             course_list.json(), [{"id": 1, "name": "course1", "users": []}]
         )
         self.assertEqual(course_list.status_code, 200)
-    
+
     def test_anonymous_can_filter_courses(self):
         # Criação de um instructor user
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -326,11 +323,9 @@ class TestCourseView(TestCase):
         # Usuários anônimos podem listar os cursos e os alunos matriculados
         course_list = client.get("/api/courses/1/")
 
-        self.assertEqual(
-            course_list.json(), {"id": 1, "name": "course1", "users": []}
-        )
+        self.assertEqual(course_list.json(), {"id": 1, "name": "course1", "users": []})
         self.assertEqual(course_list.status_code, 200)
-    
+
     def test_anonymous_cannot_filter_invalid_course(self):
         # Criação de um instructor user
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -355,35 +350,33 @@ class TestCourseView(TestCase):
 
         self.assertEqual(course_list.json(), {'errors': 'invalid course_id'})
         self.assertEqual(course_list.status_code, 404)
-    
+
     def test_whether_a_list_is_entered_to_enroll_students_in_the_course(self):
         # create student 1
         self.client.post("/api/accounts/", self.student1_data, format="json")
-        
+
         # create student 2
         self.client.post("/api/accounts/", self.student2_data, format="json")
-        
+
         # create instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
-        
+
         token = self.client.post(
             "/api/login/", self.instructor1_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # create course
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        course = self.client.post("/api/courses/", self.course_data, format="json")
+
         # Matriculando os estudantes 1, porém ao invés de uma lista, é passado um inteiro
         response = self.client.put(
             "/api/courses/1/registrations/",
             {"user_ids": 1},
             format="json",
         )
-        
+
         # Testa se retorna um status 400
         self.assertEqual(response.status_code, 400)
 
@@ -448,8 +441,8 @@ class TestCourseView(TestCase):
         )
         self.assertEqual(len(response.json()["users"]), 0)
         self.assertEqual(response.status_code, 200)
-    
-    def test_only_students_can_be_enrolled_in_the_course(self):        
+
+    def test_only_students_can_be_enrolled_in_the_course(self):
         # Criação do facilitator user
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
 
@@ -463,40 +456,44 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Criação do course
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        course = self.client.post("/api/courses/", self.course_data, format="json")
+
         # Matriculando um facilitator user
         response = self.client.put(
             "/api/courses/1/registrations/",
             {"user_ids": [1]},
             format="json",
         )
-        
-        self.assertDictEqual(response.json(), {"errors": "Only students can be enrolled in the course."})
+
+        self.assertDictEqual(
+            response.json(), {"errors": "Only students can be enrolled in the course."}
+        )
         self.assertEqual(response.status_code, 400)
-        
+
         # Matriculando um instructor user
         response = self.client.put(
             "/api/courses/1/registrations/",
             {"user_ids": [2]},
             format="json",
         )
-        
-        self.assertDictEqual(response.json(), {"errors": "Only students can be enrolled in the course."})
+
+        self.assertDictEqual(
+            response.json(), {"errors": "Only students can be enrolled in the course."}
+        )
         self.assertEqual(response.status_code, 400)
-        
+
         # Matriculando um facilitator e instructor
         response = self.client.put(
             "/api/courses/1/registrations/",
             {"user_ids": [1, 2]},
             format="json",
         )
-        
-        self.assertDictEqual(response.json(), {"errors": "Only students can be enrolled in the course."})
+
+        self.assertDictEqual(
+            response.json(), {"errors": "Only students can be enrolled in the course."}
+        )
         self.assertEqual(response.status_code, 400)
-    
+
     def test_enrolls_students_with_invalid_course_id(self):
         # Criação do student 1
         self.client.post("/api/accounts/", self.student1_data, format="json")
@@ -514,18 +511,16 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Criação do course
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
+        course = self.client.post("/api/courses/", self.course_data, format="json")
 
-        # Matriculando os students 1 e 2 no course com id 2, 
+        # Matriculando os students 1 e 2 no course com id 2,
         # porém não existe, pois só foi criado somente 1 curso até o momento
         response = self.client.put(
             "/api/courses/2/registrations/",
             {"user_ids": [1, 2]},
             format="json",
         )
-        
+
         self.assertDictEqual(response.json(), {"errors": "invalid course_id"})
         self.assertEqual(response.status_code, 404)
 
@@ -546,21 +541,21 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Criação do course
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
+        course = self.client.post("/api/courses/", self.course_data, format="json")
 
-        # Matriculando os students 3 e 4 no course com id 1, 
+        # Matriculando os students 3 e 4 no course com id 1,
         # porém esses alunos não existem, pois só foram criados os alunos com ids 1 e 2
         response = self.client.put(
             "/api/courses/1/registrations/",
             {"user_ids": [3, 4]},
             format="json",
         )
-        
-        self.assertDictEqual(response.json(), {"errors": "invalid user_id list"})
-        self.assertEqual(response.status_code, 404)
-        
+
+        self.assertDictEqual(
+            response.json(), {'errors': 'Only students can be enrolled in the course.'}
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_instructor_can_delete_courses(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -572,27 +567,25 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Criação do course
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        course = self.client.post("/api/courses/", self.course_data, format="json")
+
         # Instrutor deleta curso
         delete_course = self.client.delete("/api/courses/1/", format="json")
-        
+
         self.assertEqual(delete_course.status_code, 204)
-        
+
         # Instrutor tenta deletar curso novamente (obs: ele não existe mais)
         delete_course = self.client.delete("/api/courses/1/", format="json")
-        
+
         self.assertEqual(delete_course.status_code, 404)
-    
+
     def test_student_or_facilitator_cannot_delete_courses(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
-        
+
         # Criação do facilitator
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
-        
+
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -604,32 +597,31 @@ class TestCourseView(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
         # Criação do course pelo instructor
-        course = self.client.post(
-            "/api/courses/", self.course_data, format="json"
-        )
-        
+        course = self.client.post("/api/courses/", self.course_data, format="json")
+
         # login do facilitator
         token = self.client.post(
             "/api/login/", self.facilitator_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Facilitator tenta deletar curso
         delete_course = self.client.delete("/api/courses/1/", format="json")
-        
+
         self.assertEqual(delete_course.status_code, 403)
-        
+
         # login do estudante
         token = self.client.post(
             "/api/login/", self.student1_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Estudante tenta deletar curso
         delete_course = self.client.delete("/api/courses/1/", format="json")
         self.assertEqual(delete_course.status_code, 403)
+
 
 class TestActivityView(TestCase):
     def setUp(self):
@@ -705,10 +697,13 @@ class TestActivityView(TestCase):
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
         )
-        
-        self.assertDictEqual(activity.json(), {"id": 1, "title": "activity1", "points": 10, "submissions": []})
+
+        self.assertDictEqual(
+            activity.json(),
+            {"id": 1, "title": "activity1", "points": 10, "submissions": []},
+        )
         self.assertEqual(activity.status_code, 201)
-        
+
         # Criação do facilitator
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
 
@@ -718,15 +713,18 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Criação da activity 2 pelo facilitator
         activity = self.client.post(
             "/api/activities/", self.activity_data_2, format="json"
         )
-        
-        self.assertDictEqual(activity.json(), {"id": 2, "title": "activity2", "points": 10, "submissions": []})
+
+        self.assertDictEqual(
+            activity.json(),
+            {"id": 2, "title": "activity2", "points": 10, "submissions": []},
+        )
         self.assertEqual(activity.status_code, 201)
-    
+
     def test_students_cannot_create_activities(self):
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
@@ -742,9 +740,9 @@ class TestActivityView(TestCase):
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
         )
-        
+
         self.assertEqual(activity.status_code, 403)
-    
+
     def test_if_it_is_not_possible_to_create_activities_with_the_same_title(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -760,18 +758,24 @@ class TestActivityView(TestCase):
         activity1 = self.client.post(
             "/api/activities/", {"title": "activity1", "points": 10}, format="json"
         )
-        
-        self.assertDictEqual(activity1.json(), {"id": 1, "title": "activity1", "points": 10, "submissions": []})
+
+        self.assertDictEqual(
+            activity1.json(),
+            {"id": 1, "title": "activity1", "points": 10, "submissions": []},
+        )
         self.assertEqual(activity1.status_code, 201)
-        
+
         # Criação da mesma activity 1 pelo instructor, porém com points diferentes (ambas devem ter o mesmo id)
         activity2 = self.client.post(
             "/api/activities/", {"title": "activity1", "points": 8}, format="json"
         )
-        
-        self.assertDictEqual(activity2.json(), {"id": 1, "title": "activity1", "points": 8, "submissions": []})
-        self.assertEqual(activity1.status_code, 201)        
-    
+
+        self.assertDictEqual(
+            activity2.json(),
+            {"id": 1, "title": "activity1", "points": 8, "submissions": []},
+        )
+        self.assertEqual(activity1.status_code, 201)
+
     def test_facilitator_or_instructor_can_list_activities(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -787,13 +791,16 @@ class TestActivityView(TestCase):
         activity1 = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
         )
-        
+
         # Listando as atividades
         activities = self.client.get("/api/activities/", format='json')
-        
+
         self.assertEqual(activities.status_code, 200)
-        self.assertListEqual(activities.json(), [{"id": 1, "title": "activity1", "points": 10, "submissions": []}])
-        
+        self.assertListEqual(
+            activities.json(),
+            [{"id": 1, "title": "activity1", "points": 10, "submissions": []}],
+        )
+
         # Criação do facilitator
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
 
@@ -808,14 +815,19 @@ class TestActivityView(TestCase):
         activity2 = self.client.post(
             "/api/activities/", self.activity_data_2, format="json"
         )
-        
+
         # Listando as duas atividades, nesse caso deve retornar uma lista com as duas atividades
         activities = self.client.get("/api/activities/", format='json')
-        
+
         self.assertEqual(activities.status_code, 200)
-        self.assertListEqual(activities.json(), [{"id": 1, "title": "activity1", "points": 10, "submissions": []},
-                                                 {"id": 2, "title": "activity2", "points": 10, "submissions": []}])
-        
+        self.assertListEqual(
+            activities.json(),
+            [
+                {"id": 1, "title": "activity1", "points": 10, "submissions": []},
+                {"id": 2, "title": "activity2", "points": 10, "submissions": []},
+            ],
+        )
+
     def test_student_cannot_list_activities(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -831,7 +843,7 @@ class TestActivityView(TestCase):
         activity1 = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
         )
-        
+
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -841,12 +853,12 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Tentando listar as atividades, porém não é possível
         activities = self.client.get("/api/activities/", format='json')
-        
+
         self.assertEqual(activities.status_code, 403)
-    
+
     def test_student_can_submit_an_activity(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -861,8 +873,8 @@ class TestActivityView(TestCase):
         # Criação da activity 1 pelo instructor
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
-        )        
-        
+        )
+
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -872,26 +884,61 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Estudante faz uma submissão de uma atividade com o campo grade
-        submission = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        
+        submission = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+
         self.assertEqual(submission.status_code, 201)
-        self.assertDictEqual(submission.json(), {"id": 1, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-        
+        self.assertDictEqual(
+            submission.json(),
+            {
+                "id": 1,
+                "grade": None,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
         # Estudante faz uma nova submissão de uma atividade sem o campo grade
-        submission = self.client.post("/api/activities/1/submissions/", {"repo": "http://gitlab.com/submission1"}, format="json")
-        
+        submission = self.client.post(
+            "/api/activities/1/submissions/",
+            {"repo": "http://gitlab.com/submission1"},
+            format="json",
+        )
+
         self.assertEqual(submission.status_code, 201)
-        self.assertDictEqual(submission.json(), {"id": 2, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-        
+        self.assertDictEqual(
+            submission.json(),
+            {
+                "id": 2,
+                "grade": None,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
         # Estudante faz uma submissão da primeira atividade novamente, com os mesmos dados
         # (deve ser possível e será gerado uma nova atividade com outro id)
-        submission = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        
+        submission = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+
         self.assertEqual(submission.status_code, 201)
-        self.assertDictEqual(submission.json(), {"id": 3, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-        
+        self.assertDictEqual(
+            submission.json(),
+            {
+                "id": 3,
+                "grade": None,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
     def test_facilitator_or_instructor_cannot_submity_an_activity(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -907,12 +954,16 @@ class TestActivityView(TestCase):
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
         )
-        
+
         # Tentativa de submissão pelo instrutor
-        submission = self.client.post("/api/activities/1/submissions/", {"repo": "http://gitlab.com/submission1"}, format="json")
+        submission = self.client.post(
+            "/api/activities/1/submissions/",
+            {"repo": "http://gitlab.com/submission1"},
+            format="json",
+        )
         self.assertEqual(submission.status_code, 403)
-        
-         # Criação do facilitator
+
+        # Criação do facilitator
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
 
         # Autenticação do facilitator
@@ -921,11 +972,15 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Tentativa de submissão pelo facilitator
-        submission = self.client.post("/api/activities/1/submissions/", {"repo": "http://gitlab.com/submission1"}, format="json")
+        submission = self.client.post(
+            "/api/activities/1/submissions/",
+            {"repo": "http://gitlab.com/submission1"},
+            format="json",
+        )
         self.assertEqual(submission.status_code, 403)
-    
+
     def test_facilitator_or_instructor_can_edit_a_submission_grade(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -940,8 +995,8 @@ class TestActivityView(TestCase):
         # Criação da activity 1 pelo instructor
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
-        )        
-        
+        )
+
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -951,45 +1006,80 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Estudante faz uma submissão de atividade com o campo grade
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+
         # Autenticação do instructor novamente
         token = self.client.post(
             "/api/login/", self.instructor1_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Instrutor edita a nota de uma atividade
-        grading_submission = self.client.put("/api/submissions/1/", {"grade": 7}, format="json")
-        
+        grading_submission = self.client.put(
+            "/api/submissions/1/", {"grade": 7}, format="json"
+        )
+
         self.assertEqual(grading_submission.status_code, 200)
-        self.assertDictEqual(grading_submission.json(), {"id": 1, "grade": 7, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-        
+        self.assertDictEqual(
+            grading_submission.json(),
+            {
+                "id": 1,
+                "grade": 7,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
         # Instrutor edita a nota de uma atividade
-        grading_submission = self.client.put("/api/submissions/1/", {"grade": 7}, format="json")
-        
+        grading_submission = self.client.put(
+            "/api/submissions/1/", {"grade": 7}, format="json"
+        )
+
         self.assertEqual(grading_submission.status_code, 200)
-        self.assertDictEqual(grading_submission.json(), {"id": 1, "grade": 7, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-        
+        self.assertDictEqual(
+            grading_submission.json(),
+            {
+                "id": 1,
+                "grade": 7,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
         # Criação do facilitator
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
-        
+
         # Autenticação do facilitator
         token = self.client.post(
             "/api/login/", self.facilitator_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Facilitador edita a nota de uma atividade
-        grading_submission = self.client.put("/api/submissions/1/", {"grade": 1}, format="json")
-        
+        grading_submission = self.client.put(
+            "/api/submissions/1/", {"grade": 1}, format="json"
+        )
+
         self.assertEqual(grading_submission.status_code, 200)
-        self.assertDictEqual(grading_submission.json(), {"id": 1, "grade": 1, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1})
-    
+        self.assertDictEqual(
+            grading_submission.json(),
+            {
+                "id": 1,
+                "grade": 1,
+                "repo": "http://gitlab.com/submission1",
+                "user_id": 2,
+                "activity_id": 1,
+            },
+        )
+
     def test_student_cannot_edit_a_submission_grade(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -1004,8 +1094,8 @@ class TestActivityView(TestCase):
         # Criação da activity 1 pelo instructor
         activity = self.client.post(
             "/api/activities/", self.activity_data_1, format="json"
-        )        
-        
+        )
+
         # Criação do student
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -1015,15 +1105,19 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Estudante faz uma submissão de atividade com o campo grade
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+
         # Estudente tenta editar a nota de uma atividade
-        grading_submission = self.client.put("/api/submissions/1/", {"grade": 10}, format="json")
-        
+        grading_submission = self.client.put(
+            "/api/submissions/1/", {"grade": 10}, format="json"
+        )
+
         self.assertEqual(grading_submission.status_code, 403)
-    
+
     def test_student_can_view_only_your_submissions(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -1041,11 +1135,11 @@ class TestActivityView(TestCase):
         )
         activity2 = self.client.post(
             "/api/activities/", self.activity_data_2, format="json"
-        ) 
+        )
         activity3 = self.client.post(
             "/api/activities/", self.activity_data_3, format="json"
-        )     
-        
+        )
+
         # Criação do student 1
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -1055,47 +1149,74 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Student 1 faz submissões para duas atividades
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        submission2 = self.client.post("/api/activities/2/submissions/", self.submission_data_2, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+        submission2 = self.client.post(
+            "/api/activities/2/submissions/", self.submission_data_2, format="json"
+        )
+
         # Criação do student 2
         self.client.post("/api/accounts/", self.student2_data, format="json")
-        
+
         # Autenticação do student 2
         token = self.client.post(
             "/api/login/", self.student2_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Student 2 faz submissões para três atividades
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        submission2 = self.client.post("/api/activities/2/submissions/", self.submission_data_2, format="json")
-        submission3 = self.client.post("/api/activities/3/submissions/", self.submission_data_3, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+        submission2 = self.client.post(
+            "/api/activities/2/submissions/", self.submission_data_2, format="json"
+        )
+        submission3 = self.client.post(
+            "/api/activities/3/submissions/", self.submission_data_3, format="json"
+        )
+
         # Autenticação do student 1
         token = self.client.post(
             "/api/login/", self.student1_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Student 1 consegue visualizar apenas as suas submissões (ou seja, 2)
         submissions = self.client.get("/api/submissions/", format="json")
-        
-        self.assertListEqual(submissions.json(), [{"id": 1, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1},
-                                                  {"id": 2, "grade": None, "repo": "http://gitlab.com/submission2", "user_id": 2, "activity_id": 2}])
+
+        self.assertListEqual(
+            submissions.json(),
+            [
+                {
+                    "id": 1,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission1",
+                    "user_id": 2,
+                    "activity_id": 1,
+                },
+                {
+                    "id": 2,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission2",
+                    "user_id": 2,
+                    "activity_id": 2,
+                },
+            ],
+        )
         self.assertEqual(submissions.status_code, 200)
-        
+
         # Autenticação do instructor
         token = self.client.post(
             "/api/login/", self.instructor1_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
     def test_facilitator_or_instructor_can_view_all_submissions(self):
         # Criação do instructor
         self.client.post("/api/accounts/", self.instructor1_data, format="json")
@@ -1113,11 +1234,11 @@ class TestActivityView(TestCase):
         )
         activity2 = self.client.post(
             "/api/activities/", self.activity_data_2, format="json"
-        ) 
+        )
         activity3 = self.client.post(
             "/api/activities/", self.activity_data_3, format="json"
-        )     
-        
+        )
+
         # Criação do student 1
         self.client.post("/api/accounts/", self.student1_data, format="json")
 
@@ -1127,26 +1248,36 @@ class TestActivityView(TestCase):
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Student 1 faz submissões para duas atividades
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        submission2 = self.client.post("/api/activities/2/submissions/", self.submission_data_2, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+        submission2 = self.client.post(
+            "/api/activities/2/submissions/", self.submission_data_2, format="json"
+        )
+
         # Criação do student 2
         self.client.post("/api/accounts/", self.student2_data, format="json")
-        
+
         # Autenticação do student 2
         token = self.client.post(
             "/api/login/", self.student2_login_data, format="json"
         ).json()["token"]
 
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        
+
         # Student 2 faz submissões para três atividades
-        submission1 = self.client.post("/api/activities/1/submissions/", self.submission_data_1, format="json")
-        submission2 = self.client.post("/api/activities/2/submissions/", self.submission_data_2, format="json")
-        submission3 = self.client.post("/api/activities/3/submissions/", self.submission_data_3, format="json")
-        
+        submission1 = self.client.post(
+            "/api/activities/1/submissions/", self.submission_data_1, format="json"
+        )
+        submission2 = self.client.post(
+            "/api/activities/2/submissions/", self.submission_data_2, format="json"
+        )
+        submission3 = self.client.post(
+            "/api/activities/3/submissions/", self.submission_data_3, format="json"
+        )
+
         # Autenticação do instructor
         token = self.client.post(
             "/api/login/", self.instructor1_login_data, format="json"
@@ -1156,17 +1287,51 @@ class TestActivityView(TestCase):
 
         # Instructor consegue ver todas as submissões
         submissions = self.client.get("/api/submissions/", format="json")
-        self.assertListEqual(submissions.json(), [{"id": 1, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1},
-                                                  {"id": 2, "grade": None, "repo": "http://gitlab.com/submission2", "user_id": 2, "activity_id": 2},
-                                                  {"id": 3, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 3, "activity_id": 1},
-                                                  {"id": 4, "grade": None, "repo": "http://gitlab.com/submission2", "user_id": 3, "activity_id": 2},
-                                                  {"id": 5, "grade": None, "repo": "http://gitlab.com/submission3", "user_id": 3, "activity_id": 3}
-                                                  ])
+        self.assertListEqual(
+            submissions.json(),
+            [
+                {
+                    "id": 1,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission1",
+                    "user_id": 2,
+                    "activity_id": 1,
+                },
+                {
+                    "id": 2,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission2",
+                    "user_id": 2,
+                    "activity_id": 2,
+                },
+                {
+                    "id": 3,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission1",
+                    "user_id": 3,
+                    "activity_id": 1,
+                },
+                {
+                    "id": 4,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission2",
+                    "user_id": 3,
+                    "activity_id": 2,
+                },
+                {
+                    "id": 5,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission3",
+                    "user_id": 3,
+                    "activity_id": 3,
+                },
+            ],
+        )
         self.assertEqual(submissions.status_code, 200)
-        
+
         # Criação do facilitador
         self.client.post("/api/accounts/", self.facilitator_data, format="json")
-        
+
         # Autenticação do facilitador
         token = self.client.post(
             "/api/login/", self.facilitator_login_data, format="json"
@@ -1176,11 +1341,44 @@ class TestActivityView(TestCase):
 
         # Facilitator consegue ver todas as submissões
         submissions = self.client.get("/api/submissions/", format="json")
-        self.assertListEqual(submissions.json(), [{"id": 1, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 2, "activity_id": 1},
-                                                  {"id": 2, "grade": None, "repo": "http://gitlab.com/submission2", "user_id": 2, "activity_id": 2},
-                                                  {"id": 3, "grade": None, "repo": "http://gitlab.com/submission1", "user_id": 3, "activity_id": 1},
-                                                  {"id": 4, "grade": None, "repo": "http://gitlab.com/submission2", "user_id": 3, "activity_id": 2},
-                                                  {"id": 5, "grade": None, "repo": "http://gitlab.com/submission3", "user_id": 3, "activity_id": 3}
-                                                  ])
+        self.assertListEqual(
+            submissions.json(),
+            [
+                {
+                    "id": 1,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission1",
+                    "user_id": 2,
+                    "activity_id": 1,
+                },
+                {
+                    "id": 2,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission2",
+                    "user_id": 2,
+                    "activity_id": 2,
+                },
+                {
+                    "id": 3,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission1",
+                    "user_id": 3,
+                    "activity_id": 1,
+                },
+                {
+                    "id": 4,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission2",
+                    "user_id": 3,
+                    "activity_id": 2,
+                },
+                {
+                    "id": 5,
+                    "grade": None,
+                    "repo": "http://gitlab.com/submission3",
+                    "user_id": 3,
+                    "activity_id": 3,
+                },
+            ],
+        )
         self.assertEqual(submissions.status_code, 200)
-
