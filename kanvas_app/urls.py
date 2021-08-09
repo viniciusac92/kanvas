@@ -14,11 +14,11 @@ from .views import (
 urlpatterns = [
     path('login/', LoginView.as_view()),
     path('accounts/', AccountsView.as_view()),
-    path('api/courses/', CoursesView.as_view()),
-    path('api/courses/<int:course_id>/', CoursesRetrieveView.as_view()),
-    path('api/courses/<int:course_id>/registrations/', CoursesView.as_view()),
-    path('api/activities/', ActivitiesView.as_view()),
-    path('api/activities/<int:activity_id>/submissions/', SubmissionView.as_view()),
-    path('api/submissions/<int:submission_id>/', SubmissionEditView.as_view()),
-    path('api/submissions/', SubmissionRetrieveView.as_view()),
+    path('courses/', CoursesView.as_view()),
+    path('courses/<int:course_id>/', CoursesRetrieveView.as_view()),
+    path('courses/<int:course_id>/registrations/', CoursesView.as_view()),
+    path('activities/', ActivitiesView.as_view()),
+    path('activities/<int:activity_id>/submissions/', SubmissionView.as_view()),
+    path('submissions/<int:submission_id>/', SubmissionEditView.as_view()),
+    path('submissions/', SubmissionRetrieveView.as_view()),
 ]
