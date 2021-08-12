@@ -31,20 +31,21 @@ class SubmissionSimpleSerializer(serializers.Serializer):
 
 
 class SubmissionSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(read_only=True)
     grade = serializers.IntegerField()
     repo = serializers.CharField()
     user_id = serializers.IntegerField()
     activity_id = serializers.IntegerField()
 
 
-class ActivitySimpleSerializer(serializers.Serializer):
+class ActivitySubmissionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(default=None)
     title = serializers.CharField()
     points = serializers.IntegerField()
 
 
-class ActivitySubmissionSerializer(serializers.Serializer):
+class ActivitySubmissionResponseSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
     points = serializers.IntegerField()
-    submissions = SubmissionSerializer(many=True)
+    submissions = SubmissionSerializer(many=True, default=[])

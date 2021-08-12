@@ -68,7 +68,7 @@ test_student_or_facilitator_cannot_delete_courses (test_api.TestCourseView) ... 
 test_whether_a_list_is_entered_to_enroll_students_in_the_course (test_api.TestCourseView) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 14.970s
+Ran 30 tests in 15.919s
 
 OK
 Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

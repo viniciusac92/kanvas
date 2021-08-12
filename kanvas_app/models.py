@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.deletion import CASCADE
 
 
 class Course(models.Model):
@@ -15,6 +16,5 @@ class Activity(models.Model):
 class Submission(models.Model):
     grade = models.IntegerField(null=True)
     repo = models.CharField(max_length=255)
-    user_id = models.IntegerField()
-    activity_id = models.IntegerField()
-    activities = models.ManyToManyField(Activity, related_name="submissions")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)

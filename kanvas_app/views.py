@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from kanvas_app.models import Activity, Course, Submission
 from kanvas_app.permissions import IsInstructorOrReadOnly, StudentOnly, TeamMemberOnly
 from kanvas_app.serializers import (
-    ActivitySimpleSerializer,
+    ActivitySubmissionResponseSerializer,
     ActivitySubmissionSerializer,
     CoursesSerializer,
     CoursesUserSerializer,
@@ -152,16 +152,14 @@ class ActivitiesView(APIView):
         activities = Activity.objects.all()
         for activity_data in activities:
             submissions = Submission.objects.filter(activity_id=activity_data.id)
-            submission_list = []
-            for sub in submissions:
-                submission_list.append(sub)
-            activity_data.submissions.set(submission_list)
+            submission_list = [sub for sub in submissions]
+            activity_data.submissions = submission_list
 
-        serialized = ActivitySubmissionSerializer(activities, many=True)
+        serialized = ActivitySubmissionResponseSerializer(activities, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        activity_request_serializer = ActivitySimpleSerializer(data=request.data)
+        activity_request_serializer = ActivitySubmissionSerializer(data=request.data)
         if not activity_request_serializer.is_valid():
             return Response(
                 activity_request_serializer.errors,
@@ -172,15 +170,16 @@ class ActivitiesView(APIView):
         if Activity.objects.filter(title=request.data['title']).exists():
             activity_request_data = Activity.objects.get(title=request.data['title'])
             activity_request_data.points = request.data['points']
-            activity_request_data.submissions.set([])
-            retrieve_serializer = ActivitySubmissionSerializer(activity_request_data)
+            retrieve_serializer = ActivitySubmissionResponseSerializer(
+                activity_request_data
+            )
             return Response(retrieve_serializer.data, status=status.HTTP_201_CREATED)
 
-        activity_request_data = Activity.objects.get_or_create(
-            **validated_activity_data
-        )[0]
-        activity_request_data.submissions.set([])
-        retrieve_serializer = ActivitySubmissionSerializer(activity_request_data)
+        activity_persist_data = Activity(**validated_activity_data)
+        activity_persist_data.save()
+        retrieve_serializer = ActivitySubmissionResponseSerializer(
+            activity_persist_data
+        )
         return Response(retrieve_serializer.data, status=status.HTTP_201_CREATED)
 
 
